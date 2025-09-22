@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>お絵描きツール</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    canvas { border: 1px solid #000; touch-action: none; }
+    .controls { margin: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🎨 お絵描きツール</h2>
+  <div class="controls">
+    線の色: <input type="color" id="colorPicker" value="#000000">
+    線の太さ: <input type="range" id="thickness" min="1" max="20" value="3">
+    <button onclick="setEraser()">消しゴム</button>
+    <button onclick="saveImage()">保存</button>
+  </div>
+  <canvas id="drawCanvas" width="600" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("drawCanvas");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+    let erasing = false;
+    let currentColor = document.getElementById("colorPicker").value;
+    let currentThickness = document.getElementById("thickness").value;
+
+    canvas.addEventListener("mousedown", startDraw);
+    canvas.addEventListener("mouseup", endDraw);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("touchstart", startDraw);
+    canvas.addEventListener("touchend", endDraw);
+    canvas.addEventListener("touchmove", draw);
+
+    document.getElementById("colorPicker").addEventListener("input", e => {
+      currentColor = e.target.value;
+      erasing = false;
+    });
+
+    document.getElementById("thickness").addEventListener("input", e => {
+      currentThickness = e.target.value;
+    });
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches) {
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
+      } else {
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+    }
+
+    function startDraw(e) {
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      e.preventDefault();
+    }
+
+    function endDraw(e) {
+      drawing = false;
+      ctx.beginPath();
+      e.preventDefault();
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      const pos = getPos(e);
+      ctx.lineWidth = currentThickness;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = erasing ? "#FFFFFF" : currentColor;
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      e.preventDefault();
+    }
+
+    function setEraser() {
+      erasing = true;
+    }
+
+    function saveImage() {
+      const link = document.createElement("a");
+      link.download = "drawing.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
